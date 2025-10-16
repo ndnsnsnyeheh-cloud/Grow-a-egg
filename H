@@ -1,0 +1,861 @@
+-- Steal a Brain Rot - Enhanced Version with Server Finder
+-- LocalScript - Put in StarterGui or StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ========== Basic Variables ==========
+local isFloatEnabled = false
+local floatingPlatform = nil
+local floatConnection = nil
+local isSlowFallEnabled = false
+local slowFallConnection = nil
+
+-- Brainrot list
+local BRAINROT_LIST = {
+    "Graipuss Medussi", "Pot Hotspot", "La Grande Combinasion",
+    "Nuclearo Dinossauro", "Garama and Madundung",
+    "Chicleteira Bicicleteira", "Secret Lucky Block",
+    "Los Combinasionas", "Dragon Cannelloni",
+    "Los Hotspotsitos", "Esok Sekolah", "Ketupat Kepat",
+    "La Supreme Combinasion", "Nooo My Hotspot", "Strawberry Elephant",
+    "Spaghetti Tualetti", "Guerriro Digitale", "Ketchuru and Musturu",
+    "Tralaledon", "Los Bros", "Las Sis", "67",
+    "La Sahur Combinasion", "Los Nooo My Hotspotsitos",
+    "Los Chicleteiras", "Tacorita Bicicleta",
+    "La Karkerkar Combinasion", "Celularcini Viciosini",
+    "Quesadilla Crocodila", "Trenostruzzo Turbo 4000",
+    "Fragola La La La", "La Extinct Grande", "Los Crocodilitos", "Antonio",
+    "Anpali Babel", "Los Noobinis", "Las Capuchinas", "Mariachi Corazoni",
+    "Las tralaleritas", "Money Money Puggy", "Karker Sahur", "Dul Dul Dul",
+    "tob tobi tobi", "Tictac sahur", "Los Jobcitos", "Los 67",
+    "Tang Tang Keletang", "La Secret Combinasion", "Burguru And Fryuro",
+    "Los Karkeritos","Los Lucky Blocks", "To To To Sahur"
+}
+
+-- ========== Create UI ==========
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "StealBrainRotUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+-- Brain icon (red theme)
+local BrainIcon = Instance.new("ImageButton")
+BrainIcon.Name = "BrainIcon"
+BrainIcon.Size = UDim2.new(0, 70, 0, 70)
+BrainIcon.Position = UDim2.new(0, 25, 0, 25)
+BrainIcon.BackgroundTransparency = 1
+BrainIcon.Image = "rbxassetid://9242918232"
+BrainIcon.Parent = ScreenGui
+
+local IconStroke = Instance.new("UIStroke")
+IconStroke.Color = Color3.fromRGB(255, 50, 50)
+IconStroke.Thickness = 2
+IconStroke.Parent = BrainIcon
+
+local IconCorner = Instance.new("UICorner")
+IconCorner.CornerRadius = UDim.new(1, 0)
+IconCorner.Parent = BrainIcon
+
+-- Main frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 350, 0, 400)
+MainFrame.Position = UDim2.new(0, 120, 0, 40)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 14)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(255, 50, 50)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.2
+UIStroke.Parent = MainFrame
+
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 10, 10)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 15, 15))
+})
+UIGradient.Parent = MainFrame
+
+-- Title bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, -20, 0, 30)
+TitleBar.Position = UDim2.new(0, 10, 0, 10)
+TitleBar.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+TitleBar.BackgroundTransparency = 0.1
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleBar
+
+local MainTitle = Instance.new("TextLabel")
+MainTitle.Name = "MainTitle"
+MainTitle.Size = UDim2.new(0.7, 0, 1, 0)
+MainTitle.Position = UDim2.new(0, 10, 0, 0)
+MainTitle.BackgroundTransparency = 1
+MainTitle.Text = "🧠 STEAL A BRAIN ROT"
+MainTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+MainTitle.TextSize = 14
+MainTitle.Font = Enum.Font.GothamBold
+MainTitle.TextXAlignment = Enum.TextXAlignment.Left
+MainTitle.Parent = TitleBar
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 20, 0, 20)
+CloseButton.Position = UDim2.new(1, -25, 0.5, -10)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Text = "×"
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.BorderSizePixel = 0
+CloseButton.Parent = TitleBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(1, 0)
+CloseCorner.Parent = CloseButton
+
+-- Tab buttons
+local TabButtonsFrame = Instance.new("Frame")
+TabButtonsFrame.Name = "TabButtonsFrame"
+TabButtonsFrame.Size = UDim2.new(1, -20, 0, 30)
+TabButtonsFrame.Position = UDim2.new(0, 10, 0, 50)
+TabButtonsFrame.BackgroundTransparency = 1
+TabButtonsFrame.Parent = MainFrame
+
+local FeaturesTab = Instance.new("TextButton")
+FeaturesTab.Name = "FeaturesTab"
+FeaturesTab.Size = UDim2.new(0.45, 0, 1, 0)
+FeaturesTab.Position = UDim2.new(0, 0, 0, 0)
+FeaturesTab.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+FeaturesTab.TextColor3 = Color3.fromRGB(255, 150, 150)
+FeaturesTab.Text = "FEATURES"
+FeaturesTab.TextSize = 12
+FeaturesTab.Font = Enum.Font.GothamBold
+FeaturesTab.BorderSizePixel = 0
+FeaturesTab.Parent = TabButtonsFrame
+
+local FeaturesTabCorner = Instance.new("UICorner")
+FeaturesTabCorner.CornerRadius = UDim.new(0, 6)
+FeaturesTabCorner.Parent = FeaturesTab
+
+local ServerTab = Instance.new("TextButton")
+ServerTab.Name = "ServerTab"
+ServerTab.Size = UDim2.new(0.45, 0, 1, 0)
+ServerTab.Position = UDim2.new(0.55, 0, 0, 0)
+ServerTab.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+ServerTab.TextColor3 = Color3.fromRGB(255, 150, 150)
+ServerTab.Text = "SERVER FINDER"
+ServerTab.TextSize = 10
+ServerTab.Font = Enum.Font.GothamBold
+ServerTab.BorderSizePixel = 0
+ServerTab.Parent = TabButtonsFrame
+
+local ServerTabCorner = Instance.new("UICorner")
+ServerTabCorner.CornerRadius = UDim.new(0, 6)
+ServerTabCorner.Parent = ServerTab
+
+-- Features section
+local FeaturesSection = Instance.new("Frame")
+FeaturesSection.Name = "FeaturesSection"
+FeaturesSection.Size = UDim2.new(1, -20, 0, 280)
+FeaturesSection.Position = UDim2.new(0, 10, 0, 90)
+FeaturesSection.BackgroundTransparency = 1
+FeaturesSection.Visible = true
+FeaturesSection.Parent = MainFrame
+
+local FeaturesSectionLabel = Instance.new("TextLabel")
+FeaturesSectionLabel.Name = "FeaturesSectionLabel"
+FeaturesSectionLabel.Size = UDim2.new(1, 0, 0, 20)
+FeaturesSectionLabel.Position = UDim2.new(0, 0, 0, 0)
+FeaturesSectionLabel.BackgroundTransparency = 1
+FeaturesSectionLabel.Text = "MAIN FEATURES"
+FeaturesSectionLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+FeaturesSectionLabel.TextSize = 14
+FeaturesSectionLabel.Font = Enum.Font.GothamBold
+FeaturesSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+FeaturesSectionLabel.Parent = FeaturesSection
+
+-- Floating Platform option
+local FloatLabel = Instance.new("TextLabel")
+FloatLabel.Name = "FloatLabel"
+FloatLabel.Size = UDim2.new(0, 120, 0, 20)
+FloatLabel.Position = UDim2.new(0, 0, 0, 30)
+FloatLabel.BackgroundTransparency = 1
+FloatLabel.Text = "Floating Platform:"
+FloatLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+FloatLabel.TextSize = 12
+FloatLabel.Font = Enum.Font.Gotham
+FloatLabel.TextXAlignment = Enum.TextXAlignment.Left
+FloatLabel.Parent = FeaturesSection
+
+local FloatToggle = Instance.new("TextButton")
+FloatToggle.Name = "FloatToggle"
+FloatToggle.Size = UDim2.new(0, 60, 0, 20)
+FloatToggle.Position = UDim2.new(0, 130, 0, 30)
+FloatToggle.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+FloatToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatToggle.Text = "OFF"
+FloatToggle.TextSize = 11
+FloatToggle.Font = Enum.Font.GothamBold
+FloatToggle.BorderSizePixel = 0
+FloatToggle.Parent = FeaturesSection
+
+local FloatToggleCorner = Instance.new("UICorner")
+FloatToggleCorner.CornerRadius = UDim.new(0, 4)
+FloatToggleCorner.Parent = FloatToggle
+
+-- Slow Fall option
+local SlowFallLabel = Instance.new("TextLabel")
+SlowFallLabel.Name = "SlowFallLabel"
+SlowFallLabel.Size = UDim2.new(0, 120, 0, 20)
+SlowFallLabel.Position = UDim2.new(0, 0, 0, 60)
+SlowFallLabel.BackgroundTransparency = 1
+SlowFallLabel.Text = "Slow Fall:"
+SlowFallLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+SlowFallLabel.TextSize = 12
+SlowFallLabel.Font = Enum.Font.Gotham
+SlowFallLabel.TextXAlignment = Enum.TextXAlignment.Left
+SlowFallLabel.Parent = FeaturesSection
+
+local SlowFallToggle = Instance.new("TextButton")
+SlowFallToggle.Name = "SlowFallToggle"
+SlowFallToggle.Size = UDim2.new(0, 60, 0, 20)
+SlowFallToggle.Position = UDim2.new(0, 130, 0, 60)
+SlowFallToggle.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+SlowFallToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+SlowFallToggle.Text = "OFF"
+SlowFallToggle.TextSize = 11
+SlowFallToggle.Font = Enum.Font.GothamBold
+SlowFallToggle.BorderSizePixel = 0
+SlowFallToggle.Parent = FeaturesSection
+
+local SlowFallToggleCorner = Instance.new("UICorner")
+SlowFallToggleCorner.CornerRadius = UDim.new(0, 4)
+SlowFallToggleCorner.Parent = SlowFallToggle
+
+-- Additional info
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Name = "InfoLabel"
+InfoLabel.Size = UDim2.new(1, 0, 0, 80)
+InfoLabel.Position = UDim2.new(0, 0, 0, 90)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "Floating Platform: Creates a platform below you\nSlow Fall: Reduces fall speed to -2"
+InfoLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
+InfoLabel.TextSize = 11
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+InfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+InfoLabel.Parent = FeaturesSection
+
+-- Server Finder section
+local ServerSection = Instance.new("Frame")
+ServerSection.Name = "ServerSection"
+ServerSection.Size = UDim2.new(1, -20, 0, 280)
+ServerSection.Position = UDim2.new(0, 10, 0, 90)
+ServerSection.BackgroundTransparency = 1
+ServerSection.Visible = false
+ServerSection.Parent = MainFrame
+
+local ServerSectionLabel = Instance.new("TextLabel")
+ServerSectionLabel.Name = "ServerSectionLabel"
+ServerSectionLabel.Size = UDim2.new(1, 0, 0, 20)
+ServerSectionLabel.Position = UDim2.new(0, 0, 0, 0)
+ServerSectionLabel.BackgroundTransparency = 1
+ServerSectionLabel.Text = "SERVER FINDER"
+ServerSectionLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+ServerSectionLabel.TextSize = 14
+ServerSectionLabel.Font = Enum.Font.GothamBold
+ServerSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+ServerSectionLabel.Parent = ServerSection
+
+-- Current server info
+local CurrentJobLabel = Instance.new("TextLabel")
+CurrentJobLabel.Name = "CurrentJobLabel"
+CurrentJobLabel.Size = UDim2.new(1, 0, 0, 20)
+CurrentJobLabel.Position = UDim2.new(0, 0, 0, 30)
+CurrentJobLabel.BackgroundTransparency = 1
+CurrentJobLabel.Text = "Current Job: " .. string.sub(game.JobId, 1, 12) .. "..."
+CurrentJobLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+CurrentJobLabel.TextSize = 11
+CurrentJobLabel.Font = Enum.Font.Gotham
+CurrentJobLabel.TextXAlignment = Enum.TextXAlignment.Left
+CurrentJobLabel.Parent = ServerSection
+
+-- Search buttons
+local SearchButtonsFrame = Instance.new("Frame")
+SearchButtonsFrame.Name = "SearchButtonsFrame"
+SearchButtonsFrame.Size = UDim2.new(1, 0, 0, 36)
+SearchButtonsFrame.Position = UDim2.new(0, 0, 0, 55)
+SearchButtonsFrame.BackgroundTransparency = 1
+SearchButtonsFrame.Parent = ServerSection
+
+local SearchBtn = Instance.new("TextButton")
+SearchBtn.Name = "SearchBtn"
+SearchBtn.Size = UDim2.new(0.5, -5, 1, 0)
+SearchBtn.Position = UDim2.new(0, 0, 0, 0)
+SearchBtn.Text = "🔎 Find Servers"
+SearchBtn.Font = Enum.Font.GothamBold
+SearchBtn.TextSize = 12
+SearchBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+SearchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchBtn.AutoButtonColor = true
+SearchBtn.Parent = SearchButtonsFrame
+
+local SearchBtnCorner = Instance.new("UICorner")
+SearchBtnCorner.CornerRadius = UDim.new(0, 4)
+SearchBtnCorner.Parent = SearchBtn
+
+local ClearBtn = Instance.new("TextButton")
+ClearBtn.Name = "ClearBtn"
+ClearBtn.Size = UDim2.new(0.5, -5, 1, 0)
+ClearBtn.Position = UDim2.new(0.5, 5, 0, 0)
+ClearBtn.Text = "🧹 Clear"
+ClearBtn.Font = Enum.Font.GothamBold
+ClearBtn.TextSize = 12
+ClearBtn.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+ClearBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ClearBtn.Parent = SearchButtonsFrame
+
+local ClearBtnCorner = Instance.new("UICorner")
+ClearBtnCorner.CornerRadius = UDim.new(0, 4)
+ClearBtnCorner.Parent = ClearBtn
+
+-- Search status
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0, 0, 0, 95)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Status: Ready"
+StatusLabel.TextColor3 = Color3.fromRGB(170, 170, 255)
+StatusLabel.TextSize = 11
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = ServerSection
+
+-- Server results frame
+local ResultsFrame = Instance.new("Frame")
+ResultsFrame.Name = "ResultsFrame"
+ResultsFrame.Size = UDim2.new(1, 0, 0, 150)
+ResultsFrame.Position = UDim2.new(0, 0, 0, 120)
+ResultsFrame.BackgroundColor3 = Color3.fromRGB(15, 10, 10)
+ResultsFrame.BorderSizePixel = 0
+ResultsFrame.Parent = ServerSection
+
+local ResultsCorner = Instance.new("UICorner")
+ResultsCorner.CornerRadius = UDim.new(0, 6)
+ResultsCorner.Parent = ResultsFrame
+
+-- Scroll area for results
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Name = "ScrollFrame"
+ScrollFrame.Size = UDim2.new(1, -6, 1, -6)
+ScrollFrame.Position = UDim2.new(0, 3, 0, 3)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollFrame.ScrollBarThickness = 6
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 50, 50)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.Parent = ResultsFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Parent = ScrollFrame
+
+-- Made by Alien label for Features section
+local MadeByLabelFeatures = Instance.new("TextLabel")
+MadeByLabelFeatures.Size = UDim2.new(1, -10, 0, 20)
+MadeByLabelFeatures.Position = UDim2.new(0, 10, 1, -25)
+MadeByLabelFeatures.BackgroundTransparency = 1
+MadeByLabelFeatures.Text = "Made by Alien"
+MadeByLabelFeatures.TextColor3 = Color3.fromRGB(255, 80, 80)
+MadeByLabelFeatures.TextSize = 14
+MadeByLabelFeatures.Font = Enum.Font.GothamBold
+MadeByLabelFeatures.TextXAlignment = Enum.TextXAlignment.Left
+MadeByLabelFeatures.Parent = FeaturesSection
+
+-- Made by Alien label for Server section
+local MadeByLabelServer = Instance.new("TextLabel")
+MadeByLabelServer.Size = UDim2.new(1, -10, 0, 20)
+MadeByLabelServer.Position = UDim2.new(0, 10, 1, -25)
+MadeByLabelServer.BackgroundTransparency = 1
+MadeByLabelServer.Text = "Made by Alien"
+MadeByLabelServer.TextColor3 = Color3.fromRGB(255, 80, 80)
+MadeByLabelServer.TextSize = 14
+MadeByLabelServer.Font = Enum.Font.GothamBold
+MadeByLabelServer.TextXAlignment = Enum.TextXAlignment.Left
+MadeByLabelServer.Parent = ServerSection
+
+-- ========== Floating Platform Functions ==========
+
+-- Create platform with red effects
+local function createFloatingPlatform()
+    if floatingPlatform then
+        floatingPlatform:Destroy()
+        floatingPlatform = nil
+    end
+    
+    floatingPlatform = Instance.new("Part")
+    floatingPlatform.Name = "BrainRotPlatform"
+    floatingPlatform.Size = Vector3.new(6, 0.5, 6)
+    floatingPlatform.Anchored = true
+    floatingPlatform.CanCollide = true
+    floatingPlatform.Material = Enum.Material.Neon
+    floatingPlatform.BrickColor = BrickColor.new("Bright red")
+    floatingPlatform.Transparency = 0.2
+    
+    -- Brain emoji effect
+    local brainDecal = Instance.new("Decal")
+    brainDecal.Face = Enum.NormalId.Top
+    brainDecal.Texture = "rbxassetid://9845005156"
+    brainDecal.Parent = floatingPlatform
+    
+    -- Red lighting
+    local glow = Instance.new("SurfaceLight")
+    glow.Brightness = 2
+    glow.Color = Color3.fromRGB(255, 0, 0)
+    glow.Range = 10
+    glow.Parent = floatingPlatform
+    
+    -- Red particles effect
+    local particles = Instance.new("ParticleEmitter")
+    particles.Texture = "rbxassetid://2436646727"
+    particles.Lifetime = NumberRange.new(1, 2)
+    particles.Rate = 20
+    particles.SpreadAngle = Vector2.new(45, 45)
+    particles.Speed = NumberRange.new(3, 6)
+    particles.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.new(1, 0, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.new(1, 0.3, 0.3)),
+        ColorSequenceKeypoint.new(1, Color3.new(1, 0, 0))
+    })
+    particles.Parent = floatingPlatform
+    
+    floatingPlatform.Parent = workspace
+    return floatingPlatform
+end
+
+-- Enable/disable floating platform
+local function enableFloatingPlatform()
+    isFloatEnabled = not isFloatEnabled
+    
+    if isFloatEnabled then
+        FloatToggle.Text = "ON"
+        FloatToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
+        
+        -- Create platform
+        local platform = createFloatingPlatform()
+        
+        -- Player tracking system
+        floatConnection = RunService.Heartbeat:Connect(function()
+            if not isFloatEnabled or not platform then
+                if floatConnection then
+                    floatConnection:Disconnect()
+                end
+                if platform then
+                    platform:Destroy()
+                end
+                return
+            end
+            
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = character.HumanoidRootPart
+                platform.Position = rootPart.Position - Vector3.new(0, 4, 0)
+            end
+        end)
+    else
+        FloatToggle.Text = "OFF"
+        FloatToggle.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+        
+        if floatConnection then
+            floatConnection:Disconnect()
+            floatConnection = nil
+        end
+        
+        if floatingPlatform then
+            floatingPlatform:Destroy()
+            floatingPlatform = nil
+        end
+    end
+end
+
+-- ========== Slow Fall Functions ==========
+
+-- Enable/disable slow fall
+local function enableSlowFall()
+    isSlowFallEnabled = not isSlowFallEnabled
+    
+    if isSlowFallEnabled then
+        SlowFallToggle.Text = "ON"
+        SlowFallToggle.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
+        
+        -- Fall speed -2
+        local targetFallSpeed = -2
+        
+        slowFallConnection = RunService.Heartbeat:Connect(function()
+            if not isSlowFallEnabled then return end
+            
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local rootPart = character.HumanoidRootPart
+                
+                -- Apply slow fall
+                if rootPart.Velocity.Y < -5 then
+                    local bodyVelocity = rootPart:FindFirstChild("SlowFallVelocity")
+                    if not bodyVelocity then
+                        bodyVelocity = Instance.new("BodyVelocity")
+                        bodyVelocity.Name = "SlowFallVelocity"
+                        bodyVelocity.MaxForce = Vector3.new(0, 5000, 0)
+                        bodyVelocity.Parent = rootPart
+                    end
+                    
+                    bodyVelocity.Velocity = Vector3.new(0, math.max(rootPart.Velocity.Y, targetFallSpeed), 0)
+                else
+                    local bodyVelocity = rootPart:FindFirstChild("SlowFallVelocity")
+                    if bodyVelocity then
+                        bodyVelocity:Destroy()
+                    end
+                end
+            end
+        end)
+    else
+        SlowFallToggle.Text = "OFF"
+        SlowFallToggle.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+        
+        if slowFallConnection then
+            slowFallConnection:Disconnect()
+            slowFallConnection = nil
+        end
+        
+        -- Clean up BodyVelocity
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local bodyVelocity = character.HumanoidRootPart:FindFirstChild("SlowFallVelocity")
+            if bodyVelocity then
+                bodyVelocity:Destroy()
+            end
+        end
+    end
+end
+
+-- ========== Server Finder Functions ==========
+
+-- Check if server name matches any word from the list
+local function serverNameMatches(serverName)
+    if not serverName then return false end
+    local nameLower = string.lower(tostring(serverName))
+    for _, token in ipairs(BRAINROT_LIST) do
+        if token and token ~= "" then
+            if string.find(nameLower, string.lower(token), 1, true) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- Clear results
+local function clearResults()
+    for _, child in ipairs(ScrollFrame:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end
+
+-- Add result row to UI
+local function addResultRow(info)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -10, 0, 48)
+    row.BackgroundColor3 = Color3.fromRGB(25, 15, 15)
+    row.BorderSizePixel = 0
+    row.LayoutOrder = #ScrollFrame:GetChildren()
+    row.Parent = ScrollFrame
+
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.CornerRadius = UDim.new(0, 4)
+    rowCorner.Parent = row
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(0.62, 0, 1, 0)
+    nameLabel.Position = UDim2.new(0, 8, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Font = Enum.Font.Gotham
+    nameLabel.TextSize = 11
+    nameLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+    nameLabel.Text = tostring(info.name or ("Job: " .. info.id))
+    nameLabel.TextWrapped = true
+    nameLabel.Parent = row
+
+    local countLabel = Instance.new("TextLabel")
+    countLabel.Size = UDim2.new(0.18, 0, 1, 0)
+    countLabel.Position = UDim2.new(0.62, 0, 0, 0)
+    countLabel.BackgroundTransparency = 1
+    countLabel.Font = Enum.Font.Gotham
+    countLabel.TextSize = 11
+    countLabel.TextColor3 = Color3.fromRGB(180, 220, 180)
+    countLabel.Text = tostring(info.players or "0") .. "/" .. tostring(info.maxPlayers or "0")
+    countLabel.Parent = row
+
+    local joinBtn = Instance.new("TextButton")
+    joinBtn.Size = UDim2.new(0.18, -10, 0.6, 0)
+    joinBtn.Position = UDim2.new(0.82, 4, 0.2, 0)
+    joinBtn.Text = "Join"
+    joinBtn.Font = Enum.Font.GothamBold
+    joinBtn.TextSize = 11
+    joinBtn.BackgroundColor3 = Color3.fromRGB(0, 140, 200)
+    joinBtn.TextColor3 = Color3.new(1, 1, 1)
+    joinBtn.Parent = row
+
+    local joinCorner = Instance.new("UICorner")
+    joinCorner.CornerRadius = UDim.new(0, 4)
+    joinCorner.Parent = joinBtn
+
+    joinBtn.MouseButton1Click:Connect(function()
+        if tostring(info.id) == tostring(game.JobId) then
+            StatusLabel.Text = "⚠️ This is the current server"
+            return
+        end
+        StatusLabel.Text = "⏳ Teleporting to " .. string.sub(tostring(info.id), 1, 8) .. "..."
+        local ok, err = pcall(function()
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, info.id, LocalPlayer)
+        end)
+        if not ok then
+            StatusLabel.Text = "❌ Teleport failed: " .. tostring(err)
+        end
+    end)
+
+    -- Update CanvasSize
+    local totalHeight = 0
+    for _, v in ipairs(ScrollFrame:GetChildren()) do
+        if v:IsA("Frame") then
+            totalHeight = totalHeight + v.Size.Y.Offset + 5
+        end
+    end
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+end
+
+-- Search servers
+local function fetchBrainrotServers()
+    clearResults()
+    StatusLabel.Text = "🔎 Searching for Brainrot servers..."
+    
+    local PLACE_ID = game.PlaceId
+    local CURRENT_JOB = tostring(game.JobId)
+    local MAX_PAGES = 50
+    local PAGE_LIMIT = 50
+    local page = 0
+    local cursor = nil
+    local found = 0
+    
+    task.spawn(function()
+        while page < MAX_PAGES do
+            page = page + 1
+            local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=%d"):format(PLACE_ID, PAGE_LIMIT)
+            if cursor and cursor ~= "" then
+                url = url .. "&cursor=" .. HttpService:UrlEncode(cursor)
+            end
+
+            local ok, raw = pcall(function() 
+                return game:HttpGet(url) 
+            end)
+            
+            if not ok or not raw then
+                StatusLabel.Text = "⚠️ Failed to fetch page " .. page
+                task.wait(0.1)
+                continue
+            end
+
+            local decodeOk, data = pcall(function() 
+                return HttpService:JSONDecode(raw) 
+            end)
+            
+            if not decodeOk or not data or not data.data then
+                StatusLabel.Text = "⚠️ Invalid response page " .. page
+                task.wait(0.1)
+                continue
+            end
+
+            -- Check each server in the page
+            for _, s in ipairs(data.data) do
+                local serverName = s.name or s.playlistName or ("Server " .. tostring(s.id))
+                if serverName and serverName ~= "" and serverName ~= " " then
+                    if serverNameMatches(serverName) then
+                        if tostring(s.id) ~= CURRENT_JOB then
+                            found = found + 1
+                            addResultRow({ 
+                                id = tostring(s.id), 
+                                name = serverName, 
+                                players = s.playing, 
+                                maxPlayers = s.maxPlayers 
+                            })
+                        end
+                    end
+                end
+            end
+
+            StatusLabel.Text = string.format("🔎 Page %d - Found %d servers", page, found)
+
+            -- Next page
+            if data.nextPageCursor and data.nextPageCursor ~= "" then
+                cursor = data.nextPageCursor
+            else
+                break
+            end
+
+            task.wait(0.05)
+        end
+        
+        StatusLabel.Text = string.format("✅ Search completed - %d results from %d pages", found, page)
+    end)
+end
+
+-- ========== Dragging Functions ==========
+local function makeDraggable(gui)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                 startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- ========== Tab Switching ==========
+local function switchToTab(tabName)
+    if tabName == "Features" then
+        FeaturesSection.Visible = true
+        ServerSection.Visible = false
+        FeaturesTab.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+        ServerTab.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    else
+        FeaturesSection.Visible = false
+        ServerSection.Visible = true
+        FeaturesTab.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+        ServerTab.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
+        CurrentJobLabel.Text = "Current Job: " .. string.sub(game.JobId, 1, 12) .. "..."
+    end
+end
+
+-- ========== Button Events ==========
+FloatToggle.MouseButton1Click:Connect(enableFloatingPlatform)
+SlowFallToggle.MouseButton1Click:Connect(enableSlowFall)
+
+CloseButton.MouseButton1Click:Connect(function()
+    if isFloatEnabled then enableFloatingPlatform() end
+    if isSlowFallEnabled then enableSlowFall() end
+    toggleUI()
+end)
+
+FeaturesTab.MouseButton1Click:Connect(function()
+    switchToTab("Features")
+end)
+
+ServerTab.MouseButton1Click:Connect(function()
+    switchToTab("Server")
+end)
+
+SearchBtn.MouseButton1Click:Connect(fetchBrainrotServers)
+ClearBtn.MouseButton1Click:Connect(clearResults)
+
+-- ========== Icon Movement ==========
+makeDraggable(BrainIcon)
+makeDraggable(MainFrame)
+
+-- Simple rotation animation for icon
+task.spawn(function()
+    while task.wait(5) do
+        pcall(function()
+            TweenService:Create(BrainIcon, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Rotation = 10}):Play()
+            task.wait(2)
+            TweenService:Create(BrainIcon, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Rotation = -10}):Play()
+            task.wait(2)
+            TweenService:Create(BrainIcon, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Rotation = 0}):Play()
+        end)
+    end
+end)
+
+-- ========== Show/Hide UI ==========
+local isUIVisible = false
+local function toggleUI()
+    isUIVisible = not isUIVisible
+    if isUIVisible then
+        MainFrame.Visible = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Position = UDim2.new(0, 120, 0, 40)}):Play()
+    else
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+            {Position = UDim2.new(0, -350, 0, 40)}):Play()
+        task.wait(0.4)
+        MainFrame.Visible = false
+    end
+end
+
+BrainIcon.MouseButton1Click:Connect(toggleUI)
+
+-- ========== Automatic Cleanup ==========
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if isFloatEnabled then
+        enableFloatingPlatform()
+    end
+    if isSlowFallEnabled then
+        enableSlowFall()
+    end
+end)
+
+-- Initial tab switch
+switchToTab("Features")
